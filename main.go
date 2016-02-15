@@ -69,9 +69,9 @@ const (
 )
 
 var (
-	filePath = flag.String("f", "", "redis-cli monitor out put file")
+	filePath = flag.String("f", "", "redis-cli monitor output file")
 	listNum  = flag.Int("n", 10, "Show Slowest Calls Count")
-	sortType = flag.String("s", "max", "SlowestCalls type: max, avg, cnt")
+	sortType = flag.String("s", "max", "Set SlowestCalls Type: max, avg, cnt")
 
 	// regexp
 	// refs: https://play.golang.org/p/yl6B1oWtvE
