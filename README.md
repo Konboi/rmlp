@@ -2,14 +2,20 @@
 
 rmlp is Redis Monitor Log Profiler.
 
+Inspired by [facebookarchive/redis-faina](https://github.com/facebookarchive/redis-faina)
+
 # Installation
+
+```
+$ go get github.com/Konboi/rmlp
+```
 
 # Useage
 
 Read from stdin or an input file (-f)
 
 ```
-redis-cli monitor | rmlp
+redis-cli monitor | head -n 100 | rmlp
 
 rmlp -f redis-monitor.log
 ```
@@ -109,4 +115,10 @@ GET key:__rand_int__             1000    0.000480        0.000052
 LPUSH mylist                     2000    0.000856        0.000050
 LPOP mylist                      1000    0.000427        0.000048
 SPOP myset                       1000    0.000705        0.000038
+```
+
+redis-monitor-example.log created at local.
+
+```
+$ redis-benchmark -c 2 -n 1000
 ```
