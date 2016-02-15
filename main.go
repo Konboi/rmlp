@@ -207,10 +207,7 @@ func main() {
 		lineCount++
 	}
 
-	err := PrintResult()
-	if err != nil {
-		log.Println(err)
-	}
+	PrintResult()
 }
 
 func PrintTitle(key string) {
@@ -218,7 +215,7 @@ func PrintTitle(key string) {
 	fmt.Println("==================================")
 }
 
-func PrintResult() error {
+func PrintResult() {
 	PrintTitle("Overall Stats")
 	fmt.Printf("LineCount \t %d \n\n", lineCount)
 	fmt.Printf("\n")
@@ -259,6 +256,4 @@ func PrintResult() error {
 		fmt.Fprintf(w, "%s\t %d \t %f\t %f\n", v.Call, v.Cnt, v.Max, v.Avg)
 	}
 	w.Flush()
-
-	return nil
 }
