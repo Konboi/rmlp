@@ -69,9 +69,10 @@ const (
 )
 
 var (
-	filePath = flag.String("f", "", "redis-cli monitor output file")
-	listNum  = flag.Int("n", 10, "Show Slowest Calls Count")
-	sortType = flag.String("s", "max", "Set SlowestCalls Type: max, avg, cnt")
+	filePath    = flag.String("f", "", "redis-cli monitor output file")
+	listNum     = flag.Int("n", 10, "Show Slowest Calls Count")
+	sortType    = flag.String("s", "max", "Set SlowestCalls Type: max, avg, cnt")
+	minCountNum = flag.Int("min", 0, "Show Slowest Calls Count over the minCountNum")
 
 	// regexp
 	// refs: https://play.golang.org/p/yl6B1oWtvE
@@ -250,6 +251,9 @@ func PrintResult() {
 
 	fmt.Fprintln(w, "KEY \tCount \tMax(msec) \t Avg(msec)")
 	for i, v := range monitorLogs {
+		if v.Cnt < *minCountNum {
+			continue
+		}
 		if *listNum < i {
 			break
 		}
