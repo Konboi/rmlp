@@ -250,14 +250,16 @@ func PrintResult() {
 	}
 
 	fmt.Fprintln(w, "KEY \tCount \tMax(msec) \t Avg(msec)")
-	for i, v := range monitorLogs {
+	count := 0
+	for _, v := range monitorLogs {
 		if v.Cnt < *minCountNum {
 			continue
 		}
-		if *listNum < i {
+		if *listNum < count {
 			break
 		}
 		fmt.Fprintf(w, "%s\t %d \t %f\t %f\n", v.Call, v.Cnt, v.Max, v.Avg)
+		count++
 	}
 	w.Flush()
 }
