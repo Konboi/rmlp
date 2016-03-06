@@ -68,11 +68,25 @@ const (
 	SORT_TYPE_BY_CNT = "cnt"
 )
 
+type sliceString []string
+
+func (ss *sliceString) String() string {
+	return fmt.Sprintf("%s", *ss)
+}
+
+func (ss *sliceString) Set(value string) error {
+	*ss = append(*ss, value)
+
+	return nil
+}
+
 var (
 	filePath    = flag.String("f", "", "redis-cli monitor output file")
 	listNum     = flag.Int("n", 10, "Show Slowest Calls Count")
 	sortType    = flag.String("s", "max", "Set SlowestCalls Type: max, avg, cnt")
 	minCountNum = flag.Int("min", 0, "Show Slowest Calls Count over the minCountNum")
+
+	ignoreStrings sliceString
 
 	// regexp
 	// refs: https://play.golang.org/p/yl6B1oWtvE
@@ -85,6 +99,8 @@ var (
 	// 6: args
 	lineRegexpRule = `([\d\.]+)\s\[(\d+)\s\d+\.\d+\.\d+\.\d+:\d+]\s"(\w+)"(\s"([^(?<!\\)"]+)"|\s"([^(?<!\\)"]+)"\s(.+)|)`
 	lineRegexp     = regexp.MustCompile(lineRegexpRule)
+
+	ignoreRegexp *regexp.Regexp
 
 	readFile    *os.File
 	monitorLogs Profiles
@@ -135,6 +151,7 @@ func SetCommandIndex(command string) {
 }
 
 func main() {
+	flag.Var(&ignoreStrings, "i", "Set ignore strings")
 	flag.Parse()
 
 	if !strings.Contains(*sortType, SORT_TYPE_BY_MAX) && !strings.Contains(*sortType, SORT_TYPE_BY_AVG) && !strings.Contains(*sortType, SORT_TYPE_BY_CNT) {
@@ -150,6 +167,11 @@ func main() {
 		defer rf.Close()
 	} else {
 		readFile = os.Stdin
+	}
+
+	ignore := strings.Join(ignoreStrings, "|")
+	if ignore != "" {
+		ignoreRegexp = regexp.MustCompile(ignore)
 	}
 
 	scanner := bufio.NewScanner(readFile)
@@ -186,6 +208,14 @@ func main() {
 		} else {
 			commandTime = 0
 		}
+		beforeLine = line
+
+		if ignore != "" {
+			i := ignoreRegexp.FindAllString(scanner.Text(), -1)
+			if len(i) > 0 {
+				continue
+			}
+		}
 
 		SetProfileIndex(fmt.Sprintf("%s %s", line.Command, line.Key))
 		SetCommandIndex(line.Command)
@@ -204,7 +234,6 @@ func main() {
 		commands[commandCursor].Cnt++
 		commands[commandCursor].Sum = commands[commandCursor].Sum + commandTime
 
-		beforeLine = line
 		lineCount++
 	}
 
