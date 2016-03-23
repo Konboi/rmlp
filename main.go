@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/soh335/sliceflag"
 )
 
 type Line struct {
@@ -68,25 +70,13 @@ const (
 	SORT_TYPE_BY_CNT = "cnt"
 )
 
-type sliceString []string
-
-func (ss *sliceString) String() string {
-	return fmt.Sprintf("%s", *ss)
-}
-
-func (ss *sliceString) Set(value string) error {
-	*ss = append(*ss, value)
-
-	return nil
-}
-
 var (
 	filePath    = flag.String("f", "", "redis-cli monitor output file")
 	listNum     = flag.Int("n", 10, "Show Slowest Calls Count")
 	sortType    = flag.String("s", "max", "Set SlowestCalls Type: max, avg, cnt")
 	minCountNum = flag.Int("min", 0, "Show Slowest Calls Count over the minCountNum")
 
-	ignoreStrings sliceString
+	ignoreStrings = sliceflag.String(flag.CommandLine, "i", []string{}, "Set ignore strings")
 
 	// regexp
 	// refs: https://play.golang.org/p/yl6B1oWtvE
@@ -151,7 +141,6 @@ func SetCommandIndex(command string) {
 }
 
 func main() {
-	flag.Var(&ignoreStrings, "i", "Set ignore strings")
 	flag.Parse()
 
 	if !strings.Contains(*sortType, SORT_TYPE_BY_MAX) && !strings.Contains(*sortType, SORT_TYPE_BY_AVG) && !strings.Contains(*sortType, SORT_TYPE_BY_CNT) {
@@ -168,8 +157,7 @@ func main() {
 	} else {
 		readFile = os.Stdin
 	}
-
-	ignore := strings.Join(ignoreStrings, "|")
+	ignore := strings.Join(*ignoreStrings, "|")
 	if ignore != "" {
 		ignoreRegexp = regexp.MustCompile(ignore)
 	}
