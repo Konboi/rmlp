@@ -15,9 +15,13 @@ import (
 	"github.com/soh335/sliceflag"
 )
 
+type Lines []string
+
+type ByInput struct{ Lines }
+
 type Line struct {
 	Epoch   float64
-	Db      int
+	DB      int
 	Command string
 	Key     string
 	Args    string
@@ -50,6 +54,12 @@ type ByAvg struct{ Profiles }
 
 type ByCommand struct{ Commands }
 type ByHeavyCommand struct{ Commands }
+
+func (bi ByInput) Len() int { return len(bi.Lines) }
+func (bi ByInput) Swap(i, j int) {
+	bi.Lines[i], bi.Lines[j] = bi.Lines[j], bi.Lines[i]
+}
+func (bi ByInput) Less(i, j int) bool { return bi.Lines[i] < bi.Lines[j] }
 
 func (p Profiles) Len() int      { return len(p) }
 func (p Profiles) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
@@ -163,10 +173,16 @@ func main() {
 	}
 
 	scanner := bufio.NewScanner(readFile)
+	lines := Lines{}
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	sort.Sort(sort.Reverse(ByInput{lines}))
+
 	var beforeLine Line
 
-	for scanner.Scan() {
-		group := lineRegexp.FindStringSubmatch(scanner.Text())
+	for _, input := range lines {
+		group := lineRegexp.FindStringSubmatch(input)
 		if 1 > len(group) {
 			continue
 		}
@@ -184,7 +200,7 @@ func main() {
 
 		line := Line{
 			Epoch:   epoch,
-			Db:      db,
+			DB:      db,
 			Command: group[3],
 			Key:     group[5],
 			Args:    group[6],
@@ -192,14 +208,14 @@ func main() {
 
 		var commandTime float64
 		if beforeLine.Command != "" {
-			commandTime = line.Epoch - beforeLine.Epoch
+			commandTime = beforeLine.Epoch - line.Epoch
 		} else {
 			commandTime = 0
 		}
 		beforeLine = line
 
 		if ignore != "" {
-			i := ignoreRegexp.FindAllString(scanner.Text(), -1)
+			i := ignoreRegexp.FindAllString(input, -1)
 			if len(i) > 0 {
 				continue
 			}
